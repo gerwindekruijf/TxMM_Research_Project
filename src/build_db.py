@@ -1,25 +1,59 @@
 import lyricsgenius as lg
-import billboard_songs as bb
+import get_songs as gs
+import random
+from pathlib import Path
 
-CLIENT_ID = 'GeBEj1pzFpR9T_L5ALqj_PAqKgsRtcv6XamMYn_wJrMqGxerBtz88zks_N363KXA'
-CLIENT_SECRET = '9LBiKDGbIBIJwB9pCqLcwVv_HtVvVvx1HyNohwziFU_s0JUkMkKflMPGjJHYeEz5M65pc2aSPNnvEJI8-1RYkg'
-
-genius = lg.Genius(CLIENT_ID, skip_non_songs=True, 
-remove_section_headers=True, excluded_terms=["(Remix)", "(Live)"])
+# CLIENT_ID = 'GeBEj1pzFpR9T_L5ALqj_PAqKgsRtcv6XamMYn_wJrMqGxerBtz88zks_N363KXA'
+CLIENT_ACCESS = 'AijBp5RwCp6Cw0NymMiyJ-0PXhFDlNxLe59_ryLGmK8ZuLDSzT25YYQdWxnzauvH'
 
 
-def get_lyrics():
-    hits = bb.get_top_100_songs()
-    non_hits = bb.get_non_hits()
-    songs = hits.update(non_hits)
+def lyrics_to_file(songs, dir_path):
+    count = 0
+    path = str(Path().resolve().parent)
+    genius = lg.Genius(CLIENT_ACCESS, skip_non_songs=True, 
+    remove_section_headers=True)
 
-    for title, artist in songs:
+    for (title, artist) in songs: 
         try:
-            songs = genius.search_song(title, artist)
-            for song in songs:
-                song.lyrics
-                # file.write("\n \n   <|endoftext|>   \n \n".join(s))
-                c += 1
-            print(f"Songs grabbed:{len(c)}")
+            song = genius.search_song(title, artist)
+            name = title[:4]
+            
+            f = open(f'/{path}{dir_path}/{count}_{name}.txt','w')
+            f.write(song.lyrics)
+            f.close()
+            
+            print(f'Loaded lyrics for {title} - {artist} succesfully')
+            count += 1
+        
         except:
-            print(f"some exception at {title} - {artist}")
+            print(f'Exception at {title} - {artist}, iteration: {count}')
+    
+    print(f'Loaded:{count} lyrics')
+
+
+def partition_set(data):
+    random.shuffle(data)
+    n = len(data)
+    ratio = 0.8
+    index = int(ratio * n)
+
+    training_set = data[:index]
+    test_set = data[index:]
+    
+    return training_set, test_set
+
+
+def build_db_for(data, label):
+    training_data, test_data = partition_set(data)
+    lyrics_to_file(training_data, f'/data/training/{label}'), 
+    lyrics_to_file(test_data, '/data/test')
+
+
+def build_db():
+    hits = gs.get_top_100_songs()
+    # non_hits = gs.get_non_hits()
+
+    build_db_for(hits, 'hits')
+    # build_db_for(non_hits, 'non_hits')
+
+build_db()
