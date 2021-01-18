@@ -46,14 +46,15 @@ def partition_set(data):
 def build_db_for(data, label):
     training_data, test_data = partition_set(data)
     lyrics_to_file(training_data, f'/data/training/{label}'), 
-    lyrics_to_file(test_data, '/data/test')
+    lyrics_to_file(test_data, f'/data/test/{label}')
 
 
 def build_db():
     hits = gs.get_top_100_songs()
-    # non_hits = gs.get_non_hits()
+    non_hits = gs.get_non_hits()
 
     build_db_for(hits, 'hits')
-    # build_db_for(non_hits, 'non_hits')
+    build_db_for(non_hits, 'non_hits')
+
 
 build_db()

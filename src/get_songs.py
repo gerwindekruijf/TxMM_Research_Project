@@ -25,11 +25,11 @@ def get_non_hits():
     path = str(Path().resolve().parent)
     
     with open(f'{path}/data/non_hits.csv', 'r') as csv_file:
-        for line in csv_file.readlines():
-            col = line[0].split()
-            title = col[0].replace('\n','')
-            artist = col[1].replace('\n','')
-            non_hits.append(title, artist)
+        for line in csv_file.readlines()[1:]:
+            cols = line.rstrip().split(',')
+            title = cols[0]
+            artist = cols[1]
+            non_hits.append((title, artist))
     
     return non_hits
 
