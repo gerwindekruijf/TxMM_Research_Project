@@ -3,8 +3,7 @@ import get_songs as gs
 import random
 from pathlib import Path
 
-# CLIENT_ID = 'GeBEj1pzFpR9T_L5ALqj_PAqKgsRtcv6XamMYn_wJrMqGxerBtz88zks_N363KXA'
-CLIENT_ACCESS = 'AijBp5RwCp6Cw0NymMiyJ-0PXhFDlNxLe59_ryLGmK8ZuLDSzT25YYQdWxnzauvH'
+CLIENT_ACCESS = 'INSERT SECRET GENIUS API HERE'
 
 
 def lyrics_to_file(songs, dir_path):
