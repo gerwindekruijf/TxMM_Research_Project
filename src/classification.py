@@ -5,6 +5,7 @@ import sklearn.model_selection
 
 from nltk.corpus import stopwords
 from nltk.tokenize import wordpunct_tokenize, sent_tokenize
+from nltk.util import ngrams
 from sklearn.svm import SVC
 from pathlib import Path
 
@@ -23,28 +24,42 @@ def load_test_data():
 
 
 def extract_features(text):
+    stop_words = list(stopwords.words('english'))[:9]
     bag_of_words = [x for x in wordpunct_tokenize(text)]
+    sentences = [x for x in sent_tokenize(text)]
     features = []
-    total_count = len(bag_of_words) if bag_of_words is not [] else 1
 
-    # Feature 1: Total count of lyrics
-    features.append(total_count)
+    sentence_count = len(sentences) if sentences is not [] else 1
+    word_count = len(bag_of_words) if bag_of_words is not [] else 1
+    
+    # Feature 1: Total count of words
+    features.append(word_count)
     
     # Feature 2: Average word length
-    features.append(sum([len(x.lower()) for x in bag_of_words]) / total_count)
-
+    features.append(sum([len(x.lower()) for x in bag_of_words]) / word_count)
+    
     # Feature 3: Number of parentheses, these indicate addlips
-    features.append(len([x for x in bag_of_words if "(" in x]))
+    features.append(len([x for x in bag_of_words if "(" in x and ")" in x]))
 
-    # Feature 4-26: Count most common words
-    common_words = ['love', 'you', 'feel', 'never', 'night',
-    'thing', 'gonna', 'away', 'let', 'me', 'tell', 'down', 'we'
-    'over', 'yeah', 'i', 'life', 'need', 'heart', 'here', 'hate',
-    'my']
+    # Feature 4: Top 10 stop words
+    features.append(len([x for x in bag_of_words if x.lower() in stop_words]))
 
-    for word in common_words: 
-        features.append(len([x for x in bag_of_words if x.lower() == word]))
+    # Feature 5: Sentence count
+    features.append(sentence_count)
+    
+    # Feature 6: Maximum repeated sentence ratio
+    features.append(max([sentences.count(x) for x in set(sentences)]) / sentence_count)
 
+    # Feature 7-18: Count contractions
+    contractions = ["n't", "'s", "i'm", "'re", "'ve", 
+    "'d", "'ll", "'o'", "'t", "'em", "y'", "'n"]
+    for c in contractions:
+        features.append(len([x for x in bag_of_words if c in x.lower()]))
+
+    # Feature 19-20: Count oh and oohs
+    features.append(len([x for x in bag_of_words if x.lower() == "oh"]))
+    features.append(len([x for x in bag_of_words if x.lower() == "ooh"]))
+    
     # Pos-tags list (36 tags)
     pos_tags = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR',
     'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS',
@@ -52,7 +67,7 @@ def extract_features(text):
     'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$',
     'WRB']
     
-    # Feature 27-63 (36 pos tags)
+    # Feature 21-56 (36 pos tags)
     tagged = nltk.pos_tag(bag_of_words)
     for tag in pos_tags:
         value_list = []
@@ -115,13 +130,15 @@ def test_classifier(features, target):
 def run_classifier():
     features, avg_scores, target = train_classifier()
     test_scores = test_classifier(features, target)
+    labels = ['recall', 'precision', 'f1_score', 'rmse']
 
-    # Print the averaged score
-    labels = ['recall', 'precision', 'f1_score', 'average precision']
-    print(avg_scores)
+    avg_score_len = len(avg_scores)
+    for idx, label in enumerate(labels):
+        avg_score = sum([x[idx] for x in avg_scores]) / avg_score_len
+        print(f"Average score for {label}: {avg_score}")
 
-    for score in test_scores:
-        print(score)
+    for idx, score in enumerate(test_scores):
+        print(f"Test score for {labels[idx]}: {score}")
 
 
 run_classifier()
